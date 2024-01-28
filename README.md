@@ -6,7 +6,7 @@ GitHub configuration managed by terraform
 
 ## Setup
 
-1. Generate PAT via github settings
+1. Generate PAT via github settings. You can use an action's GITHUB_TOKEN which is used default but it has limited permissions.
 2. Set PAT as `TF_VAR_github_token` to this repository secret
 3. Run `Terraform` action
 
