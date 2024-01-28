@@ -174,3 +174,4 @@ resource "github_issue_label" "label-2024-08" {
   name       = "2024/08"
   color      = var.month_colors["08"]
 }
+
