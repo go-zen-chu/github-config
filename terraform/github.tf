@@ -53,9 +53,10 @@ variable "month_colors" {
 
 # Repositories
 resource "github_repository" "github-config" {
-  name        = "github-config"
-  description = "GitHub configuration managed by terraform"
-  has_issue   = true
+  name                   = "github-config"
+  description            = "GitHub configuration managed by terraform"
+  has_issues             = true
+  delete_branch_on_merge = true
 }
 
 # Task time labels definitions
