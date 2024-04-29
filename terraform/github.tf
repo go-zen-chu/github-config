@@ -2,7 +2,7 @@ terraform {
   required_providers {
     github = {
       source  = "integrations/github"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -15,16 +15,14 @@ provider "github" {
 variable "github_token" {
   type = string
 }
-variable "repositories" {
-  type = list(string)
-  # repositories that you want to manage by this configs
-  default = [
-    "github-config",
-  ]
-}
-variable "time_colors" {
-  type = map(string)
-  default = {
+locals {
+  repositories = {
+    "github-config" = "GitHub configuration managed by terraform"
+    "tasks"         = "My private tasks"
+  }
+  num_repositories = length(local.repositories)
+  # TIPS: terraform internally handles with alphabetical order -> 120m, 15m, 30m, 45m, 60m, 90m
+  working_time_colors = {
     "15m"  = "fffcdb"
     "30m"  = "d4ecea"
     "45m"  = "ae7a26"
@@ -32,10 +30,13 @@ variable "time_colors" {
     "90m"  = "914487"
     "120m" = "f39800"
   }
-}
-variable "month_colors" {
-  type = map(string)
-  default = {
+  num_working_times = length(local.working_time_colors)
+  years = [
+    "2023",
+    "2024",
+  ]
+  num_years = length(local.years)
+  month_colors = {
     "01" = "c7402c"
     "02" = "5e7db9"
     "03" = "e8abb9"
@@ -49,131 +50,34 @@ variable "month_colors" {
     "11" = "763724"
     "12" = "192983"
   }
+  num_months      = length(local.month_colors)
+  num_year_months = local.num_years * local.num_months
 }
 
 # Repositories
-resource "github_repository" "github-config" {
-  name                   = "github-config"
-  description            = "GitHub configuration managed by terraform"
+resource "github_repository" "repositories" {
+  count                  = local.num_repositories
+  name                   = element(keys(local.repositories), count.index)
+  description            = local.repositories[element(keys(local.repositories), count.index)]
   has_issues             = true
   delete_branch_on_merge = true
 }
 
 # Task time labels definitions
-resource "github_issue_label" "label-15m" {
-  for_each    = toset(var.repositories)
-  repository  = each.value
-  name        = "15m"
-  color       = var.time_colors["15m"]
-  description = "Task that takes 15 minutes"
-}
-resource "github_issue_label" "label-30m" {
-  for_each    = toset(var.repositories)
-  repository  = each.value
-  name        = "30m"
-  color       = var.time_colors["30m"]
-  description = "Task that takes 30 minutes"
-}
-resource "github_issue_label" "label-45m" {
-  for_each    = toset(var.repositories)
-  repository  = each.value
-  name        = "45m"
-  color       = var.time_colors["45m"]
-  description = "Task that takes 45 minutes"
-}
-resource "github_issue_label" "label-60m" {
-  for_each    = toset(var.repositories)
-  repository  = each.value
-  name        = "60m"
-  color       = var.time_colors["60m"]
-  description = "Task that takes 60 minutes"
-}
-resource "github_issue_label" "label-90m" {
-  for_each    = toset(var.repositories)
-  repository  = each.value
-  name        = "90m"
-  color       = var.time_colors["90m"]
-  description = "Task that takes 90 minutes"
-}
-resource "github_issue_label" "label-120m" {
-  for_each    = toset(var.repositories)
-  repository  = each.value
-  name        = "120m"
-  color       = var.time_colors["120m"]
-  description = "Task that takes 120 minutes"
+resource "github_issue_label" "working_time_labels" {
+  # Seems there is no way to loop over defining multiple resources
+  # e.g. 3 repo x 5 labels -> 0, 1, 2, 3, 4 for repo0, 5, 6, 7, 8, 9 for repo1, 10, 11, 12, 13, 14 for repo2
+  count      = local.num_repositories * local.num_working_times
+  repository = element(keys(local.repositories), floor(count.index / local.num_working_times))
+  name       = element(keys(local.working_time_colors), floor(count.index % local.num_working_times))
+  color      = local.working_time_colors[element(keys(local.working_time_colors), floor(count.index % local.num_working_times))]
 }
 
 # Month labels definitions
-resource "github_issue_label" "label-2023-09" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2023/09"
-  color      = var.month_colors["09"]
+resource "github_issue_label" "year_month_definition_labels" {
+  # e.g. 2 repos x 2 years x 3 month_colors -> repo0: 0, 1, 2 for 2023, 3, 4, 5 for 2024, repo1: 6, 7, 8 for 2023, 9, 10, 11 for 2024
+  count      = local.num_repositories * local.num_year_months
+  repository = element(keys(local.repositories), floor(count.index / local.num_year_months))
+  name       = "${element(local.years, floor(count.index % local.num_year_months / local.num_months))}/${element(keys(local.month_colors), floor(count.index % local.num_year_months % local.num_months))}"
+  color      = local.month_colors[element(keys(local.month_colors), floor(count.index % local.num_year_months % local.num_months))]
 }
-resource "github_issue_label" "label-2023-10" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2023/10"
-  color      = var.month_colors["10"]
-}
-resource "github_issue_label" "label-2023-11" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2023/11"
-  color      = var.month_colors["11"]
-}
-resource "github_issue_label" "label-2023-12" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2023/12"
-  color      = var.month_colors["12"]
-}
-resource "github_issue_label" "label-2024-01" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/01"
-  color      = var.month_colors["01"]
-}
-resource "github_issue_label" "label-2024-02" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/02"
-  color      = var.month_colors["02"]
-}
-resource "github_issue_label" "label-2024-03" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/03"
-  color      = var.month_colors["03"]
-}
-resource "github_issue_label" "label-2024-04" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/04"
-  color      = var.month_colors["04"]
-}
-resource "github_issue_label" "label-2024-05" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/05"
-  color      = var.month_colors["05"]
-}
-resource "github_issue_label" "label-2024-06" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/06"
-  color      = var.month_colors["06"]
-}
-resource "github_issue_label" "label-2024-07" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/07"
-  color      = var.month_colors["07"]
-}
-resource "github_issue_label" "label-2024-08" {
-  for_each   = toset(var.repositories)
-  repository = each.value
-  name       = "2024/08"
-  color      = var.month_colors["08"]
-}
-

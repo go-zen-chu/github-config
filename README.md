@@ -15,12 +15,15 @@ GitHub configuration managed by terraform
 In your .envrc
 
 ```bash
+# create PAT as shown in Setup
 export TF_VAR_github_token=xxxxxxxxxx
 ```
 
 Install terraform command and run below
 
 ```bash
+cd ./terraform
+terraform init -upgrade
 terraform plan
 ```
 
