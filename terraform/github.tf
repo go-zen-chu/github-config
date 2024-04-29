@@ -22,8 +22,8 @@ locals {
       visibility  = "public"
     }
     "tasks" = {
-      description = "My private tasks"
-      visibility  = "private"
+      description  = "My private tasks"
+      has_projects = true
     }
   }
   num_repositories = length(local.repositories)
@@ -62,12 +62,15 @@ locals {
 
 # Repositories
 resource "github_repository" "repositories" {
-  count                  = local.num_repositories
-  name                   = element(keys(local.repositories), count.index)
-  description            = local.repositories[element(keys(local.repositories), count.index)]["description"]
-  visibility             = local.repositories[element(keys(local.repositories), count.index)]["visibility"]
+  count       = local.num_repositories
+  name        = element(keys(local.repositories), count.index)
+  description = local.repositories[element(keys(local.repositories), count.index)]["description"]
+  # default visibility to private
+  visibility             = lookup(local.repositories[element(keys(local.repositories), count.index)], "visibility", "private")
+  has_projects           = lookup(local.repositories[element(keys(local.repositories), count.index)], "has_projects", false)
   has_issues             = true
   delete_branch_on_merge = true
+  vulnerability_alerts   = true
 }
 
 # Task time labels definitions
