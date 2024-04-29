@@ -17,8 +17,14 @@ variable "github_token" {
 }
 locals {
   repositories = {
-    "github-config" = "GitHub configuration managed by terraform"
-    "tasks"         = "My private tasks"
+    "github-config" = {
+      description = "GitHub configuration managed by terraform"
+      visibility  = "public"
+    }
+    "tasks" = {
+      description = "My private tasks"
+      visibility  = "private"
+    }
   }
   num_repositories = length(local.repositories)
   # TIPS: terraform internally handles with alphabetical order -> 120m, 15m, 30m, 45m, 60m, 90m
@@ -58,7 +64,8 @@ locals {
 resource "github_repository" "repositories" {
   count                  = local.num_repositories
   name                   = element(keys(local.repositories), count.index)
-  description            = local.repositories[element(keys(local.repositories), count.index)]
+  description            = local.repositories[element(keys(local.repositories), count.index)]["description"]
+  visibility             = local.repositories[element(keys(local.repositories), count.index)]["visibility"]
   has_issues             = true
   delete_branch_on_merge = true
 }
