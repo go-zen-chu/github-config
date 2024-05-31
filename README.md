@@ -30,5 +30,5 @@ terraform plan
 If you already have your directory, then you might need `terraform import` to make tfstate asis.
 
 ```bash
-terraform import github_repository.your_repo your_repo
+terraform import 'github_repository.your_repo[0]' your_repo
 ```
