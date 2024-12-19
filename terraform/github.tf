@@ -56,7 +56,7 @@ locals {
     "11" = "763724"
     "12" = "192983"
   }
-  num_months      = length(local.month_colors)
+  num_months      = 12
   num_year_months = local.num_years * local.num_months
 }
 
