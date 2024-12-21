@@ -26,7 +26,6 @@ locals {
       has_projects = true
     }
   }
-  num_repositories = length(local.repositories)
   # TIPS: terraform internally handles with alphabetical order -> 120m, 15m, 30m, 45m, 60m, 90m
   working_time_colors = {
     "15m"  = "fffcdb"
@@ -36,12 +35,19 @@ locals {
     "90m"  = "914487"
     "120m" = "f39800"
   }
-  num_working_times = length(local.working_time_colors)
+  flatten_repository_working_time_colors = flatten([
+    for repo, value in local.repositories : [
+      for time, color in local.working_time_colors : {
+        repository = repo
+        time       = time
+        color      = color
+      }
+    ]
+  ])
   years = [
     "2023",
     "2024",
   ]
-  num_years = length(local.years)
   month_colors = {
     "01" = "c7402c"
     "02" = "5e7db9"
@@ -56,15 +62,30 @@ locals {
     "11" = "763724"
     "12" = "192983"
   }
-  num_months      = 12
-  num_year_months = local.num_years * local.num_months
+  flatten_year_month_colors = flatten([
+    for year in local.years : [
+      for month, color in local.month_colors : {
+        year_month = "${year}/${month}"
+        color      = color
+      }
+    ]
+  ])
+  flatten_repository_year_month_colors = flatten([
+    for repo, value in local.repositories : [
+      for f in local.flatten_year_month_colors : {
+        repository = repo
+        year_month = f.year_month
+        color      = f.color
+      }
+    ]
+  ])
 }
 
 # Repositories
 resource "github_repository" "repositories" {
   for_each    = local.repositories
   name        = each.key
-  description = each.value["description"]
+  description = each.value.description
   # default visibility to private
   visibility             = lookup(each.value, "visibility", "private")
   has_projects           = lookup(each.value, "has_projects", false)
@@ -75,19 +96,21 @@ resource "github_repository" "repositories" {
 
 # Task time labels definitions
 resource "github_issue_label" "working_time_labels" {
-  # Seems there is no way to loop over defining multiple resources
-  # e.g. 3 repo x 5 labels -> 0, 1, 2, 3, 4 for repo0, 5, 6, 7, 8, 9 for repo1, 10, 11, 12, 13, 14 for repo2
-  count      = local.num_repositories * local.num_working_times
-  repository = element(keys(local.repositories), floor(count.index / local.num_working_times))
-  name       = element(keys(local.working_time_colors), floor(count.index % local.num_working_times))
-  color      = local.working_time_colors[element(keys(local.working_time_colors), floor(count.index % local.num_working_times))]
+  # no nested for_each in terraform
+  for_each = {
+    for f in local.flatten_repository_working_time_colors : "${f.repository}-${f.time}" => f
+  }
+  repository = each.value.repository
+  name       = each.value.time
+  color      = each.value.color
 }
 
 # Month labels definitions
 resource "github_issue_label" "year_month_definition_labels" {
-  # e.g. 2 repos x 2 years x 3 month_colors -> repo0: 0, 1, 2 for 2023, 3, 4, 5 for 2024, repo1: 6, 7, 8 for 2023, 9, 10, 11 for 2024
-  count      = local.num_repositories * local.num_year_months
-  repository = element(keys(local.repositories), floor(count.index / local.num_year_months))
-  name       = "${element(local.years, floor(count.index % local.num_year_months / local.num_months))}/${element(keys(local.month_colors), floor(count.index % local.num_year_months % local.num_months))}"
-  color      = local.month_colors[element(keys(local.month_colors), floor(count.index % local.num_year_months % local.num_months))]
+  for_each = {
+    for f in local.flatten_repository_year_month_colors : "${f.repository}-${f.year_month}" => f
+  }
+  repository = each.value.repository
+  name       = each.value.year_month
+  color      = each.value.color
 }
