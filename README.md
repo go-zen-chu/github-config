@@ -30,5 +30,17 @@ terraform plan
 If you already have your directory, then you might need `terraform import` to make tfstate asis.
 
 ```bash
-terraform import 'github_repository.your_repo[0]' your_repo
+terraform import 'github_repository.repositories[0]' your_repo
+```
+
+## Troubleshooting
+
+### When you want to change `count` to `for_each`
+
+You can use `state mv` command.
+
+```console
+$ terraform state mv 'github_repository.repositories[1]' 'github_repository.repositories["tasks"]'       
+Move "github_repository.repositories[1]" to "github_repository.repositories[\"tasks\"]"
+Successfully moved 1 object(s).
 ```

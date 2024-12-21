@@ -62,12 +62,12 @@ locals {
 
 # Repositories
 resource "github_repository" "repositories" {
-  count       = local.num_repositories
-  name        = element(keys(local.repositories), count.index)
-  description = local.repositories[element(keys(local.repositories), count.index)]["description"]
+  for_each    = local.repositories
+  name        = each.key
+  description = each.value["description"]
   # default visibility to private
-  visibility             = lookup(local.repositories[element(keys(local.repositories), count.index)], "visibility", "private")
-  has_projects           = lookup(local.repositories[element(keys(local.repositories), count.index)], "has_projects", false)
+  visibility             = lookup(each.value, "visibility", "private")
+  has_projects           = lookup(each.value, "has_projects", false)
   has_issues             = true
   delete_branch_on_merge = true
   vulnerability_alerts   = true
