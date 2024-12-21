@@ -15,6 +15,7 @@ provider "github" {
 variable "github_token" {
   type = string
 }
+
 locals {
   repositories = {
     "github-config" = {
@@ -47,6 +48,7 @@ locals {
   years = [
     "2023",
     "2024",
+    "2025",
   ]
   month_colors = {
     "01" = "c7402c"
@@ -71,7 +73,8 @@ locals {
     ]
   ])
   flatten_repository_year_month_colors = flatten([
-    for repo, value in local.repositories : [
+    # only set for repositories those require year_month
+    for repo in ["tasks"] : [
       for f in local.flatten_year_month_colors : {
         repository = repo
         year_month = f.year_month
