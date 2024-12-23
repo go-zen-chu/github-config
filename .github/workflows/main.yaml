@@ -1,0 +1,51 @@
+name: main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - terraform/**/*
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    env:
+      tf_actions_working_dir: terraform
+      TF_VAR_github_token: ${{ secrets.TF_VAR_github_token }}
+    defaults:
+      run:
+        working-directory: ${{ env.tf_actions_working_dir }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+      - name: Terraform Init
+        id: init
+        run: terraform init
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan
+      - name: Terraform apply
+        id: apply
+        run: terraform apply -auto-approve
+      - name: Check diff
+        id: diff
+        run: |
+          git add -N .
+          git diff --name-only --exit-code
+        continue-on-error: true
+      - if: steps.diff.outcome == 'failure'
+        name: When we have diff, commit and push output
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "[skip ci] Updated output"
+          git push

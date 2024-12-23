@@ -1,6 +1,7 @@
 # github-config
 
-[![Terraform](https://github.com/go-zen-chu/github-config/actions/workflows/terraform.yaml/badge.svg)](https://github.com/go-zen-chu/github-config/actions/workflows/terraform.yaml)
+[![main](https://github.com/go-zen-chu/github-config/actions/workflows/main.yaml/badge.svg)](https://github.com/go-zen-chu/github-config/actions/workflows/main.yaml)
+[![pr](https://github.com/go-zen-chu/github-config/actions/workflows/pr.yaml/badge.svg)](https://github.com/go-zen-chu/github-config/actions/workflows/pr.yaml)
 
 GitHub configuration managed by terraform
 
@@ -30,7 +31,8 @@ terraform plan
 If you already have your directory, then you might need `terraform import` to make tfstate asis.
 
 ```bash
-terraform import 'github_repository.repositories[0]' your_repo
+terraform import 'github_repository.repositories["new-repo"]' new-repo
+terraform import 'github_issue_label.year_month_definition_labels["new-repo-2023/01"]' new-repo
 ```
 
 ## Troubleshooting
