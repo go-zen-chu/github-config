@@ -32,7 +32,7 @@ If you already have your directory, then you might need `terraform import` to ma
 
 ```bash
 terraform import 'github_repository.repositories["new-repo"]' new-repo
-terraform import 'github_issue_label.year_month_definition_labels["new-repo-2023/01"]' new-repo
+terraform import 'github_issue_label.year_month_definition_labels["new-repo-2023/01"]' new-repo:2023/01
 ```
 
 ## Troubleshooting
