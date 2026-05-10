@@ -18,10 +18,6 @@ variable "github_token" {
 
 locals {
   repositories = {
-    "github-config" = {
-      description = "GitHub configuration managed by terraform"
-      visibility  = "public"
-    }
     "tasks" = {
       description  = "My private tasks"
       has_projects = true
@@ -49,6 +45,7 @@ locals {
     "2023",
     "2024",
     "2025",
+    "2026",
   ]
   month_colors = {
     "01" = "c7402c"
