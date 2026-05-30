@@ -19,8 +19,8 @@ jobs:
       run:
         working-directory: ${{ env.tf_actions_working_dir }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v6
+      - uses: hashicorp/setup-terraform@v4
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check
